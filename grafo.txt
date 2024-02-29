@@ -1,0 +1,14 @@
+ponto_inicial(a). % indica a partir de onde a busca deve começar.
+ponto_final(c). % indica onde a busca deve terminar.
+pode_ir(a,b,3). % há uma ligação (uma rua, por exemplo) entre a e b com distância 3.
+pode_ir(b,c,5).
+pode_ir(a,c,8).
+pode_ir(a,d,5).
+pode_ir(b,d,1).
+h(a,d,2). % distância em linha reta entre os pontos a e d com valor de 2.
+h(a,b,10).
+h(a,c,5).
+h(a,d,8).
+h(b,d,20).
+h(c,d,10).
+h(d,c,10).
