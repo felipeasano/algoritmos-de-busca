@@ -1,5 +1,5 @@
-ponto_inicial(a). % indica a partir de onde a busca deve começar.
-pode_ir(a,b,3). % há uma ligação (uma rua, por exemplo) entre a e b com distância 3.
+ponto_inicial(a).
+pode_ir(a,b,3).
 pode_ir(a,d,10).
 pode_ir(b,c,7).
 pode_ir(b,d,2).
@@ -10,11 +10,11 @@ pode_ir(d,f,8).
 pode_ir(e,f,2).
 pode_ir(e,g,4).
 pode_ir(f,g,6).
-ponto_final(g). % indica onde a busca deve terminar.
+ponto_final(g).
 h(a,g,15). % heurística para o nó g
 h(b,g,10). % heurística para o nó g
 h(c,g,8). % heurística para o nó g
 h(d,g,7). % heurística para o nó g
 h(e,g,5). % heurística para o nó g
 h(f,g,3). % heurística para o nó g
-h(g,g,0). % heurística para o nó g (zero, pois já está no destino)
+h(g,g,0). % heurística para o nó g %(zero, pois já está no destino)

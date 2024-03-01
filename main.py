@@ -1,4 +1,9 @@
 import networkx as nx
+import heapq
+
+def pause():
+    input("Pressione Enter para continuar...")
+    print("------------------------------------------------------------------------------")
 
 def ler_arquivo(nome_arquivo):
     grafo = nx.Graph()
@@ -44,6 +49,17 @@ def dijkstra(grafo, ponto_inicial, ponto_final):
         visitados.add(u)
         print("Avaliando ponto:", u)
         
+        # Apresenta custos acumulados
+        print("Custos acumulados:", custos)
+        
+        # Apresenta nós visitados até o momento
+        print("Nós visitados:", visitados)
+
+        # Apresenta o caminho parcial encontrado
+        print("Caminho parcial encontrado:", reconstruct_path(anterior, u))
+
+        pause()
+        
         # Atualiza os custos dos vizinhos de u
         for v in grafo.neighbors(u):
             novo_custo = custos[u] + grafo[u][v]['weight']
@@ -71,6 +87,8 @@ def dfs(grafo, ponto_inicial, ponto_final):
             return True
         visitados.add(v)
         print("Avaliando ponto:", v)
+        print("Caminho parcial encontrado:", caminho)  # Impressão do caminho parcial
+        pause()
         for vizinho in grafo.neighbors(v):
             if vizinho not in visitados:
                 caminho.append(vizinho)
@@ -82,26 +100,45 @@ def dfs(grafo, ponto_inicial, ponto_final):
     dfs_visit(ponto_inicial)
     return caminho
 
-def astar(grafo, ponto_inicial, ponto_final, heuristica):
-    heuristica = nx.get_node_attributes(grafo, 'heuristica')
-    visitados = set()
-    fronteira = [(0 + heuristica[ponto_inicial], ponto_inicial, [ponto_inicial])]
+def reconstruct_path(cameFrom, current):
+    total_path = [current]
+    while current in cameFrom:
+        current = cameFrom[current]
+        total_path.insert(0, current)
+    return total_path
+
+def A_Star(grafo, ponto_inicial, ponto_final, heuristica):
+    openSet = [(0 + heuristica[ponto_inicial], ponto_inicial)]
+    cameFrom = {}
+    gScore = {node: float('inf') for node in grafo.nodes}
+    gScore[ponto_inicial] = 0
+    fScore = {node: float('inf') for node in grafo.nodes}
+    fScore[ponto_inicial] = heuristica[ponto_inicial]
+
+    while openSet:
+        _, current = heapq.heappop(openSet)
+
+        print("Visitando nó:", current)
+        print("Valor peso + heurística:", fScore[current])
+        print("Custos acumulados:", gScore)
+        print("Nós na fila de prioridade:", [node[1] for node in openSet])
+        print("Heurística do nó:", heuristica[current])
+        print("Caminho parcial encontrado:", reconstruct_path(cameFrom, current))
+        pause()
+
+        if current == ponto_final:
+            return reconstruct_path(cameFrom, current)
+
+        for neighbor in grafo.neighbors(current):
+            tentative_gScore = gScore[current] + grafo[current][neighbor]['weight']
+            if tentative_gScore < gScore[neighbor]:
+                cameFrom[neighbor] = current
+                gScore[neighbor] = tentative_gScore
+                fScore[neighbor] = tentative_gScore + heuristica[neighbor]
+                heapq.heappush(openSet, (fScore[neighbor], neighbor))
+
+    return None  # Failure
     
-    while fronteira:
-        fronteira.sort(reverse=True)  # Ordena por f(n) = g(n) + h(n)
-        _, atual, caminho = fronteira.pop()
-        if atual == ponto_final:
-            return caminho
-        if atual not in visitados:
-            visitados.add(atual)
-            print("Avaliando ponto:", atual)
-            for vizinho in grafo.neighbors(atual):
-                if vizinho not in visitados:
-                    novo_caminho = caminho + [vizinho]
-                    custo = len(novo_caminho) - 1 + heuristica[vizinho]  # g(n) + h(n)
-                    fronteira.append((custo, vizinho, novo_caminho))
-    
-    return None
 
 nome_arquivo = "grafo2.txt"  # Nome do arquivo de entrada
 grafo, ponto_inicial, ponto_final, heuristica = ler_arquivo(nome_arquivo)
@@ -114,7 +151,7 @@ elif opcao == "DFS":
     caminho_dfs = dfs(grafo, ponto_inicial, ponto_final)
     print("Caminho encontrado (Busca em Profundidade):", caminho_dfs)
 elif opcao == "A*":
-    caminho_astar = astar(grafo, ponto_inicial, ponto_final, heuristica)
+    caminho_astar = A_Star(grafo, ponto_inicial, ponto_final, heuristica)
     print("Caminho encontrado (A*):", caminho_astar)
 else:
     print("Opção inválida.")

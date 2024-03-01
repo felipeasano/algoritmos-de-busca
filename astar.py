@@ -1,55 +1,74 @@
-import networkx as nx
+from heapq import heappop, heappush
 
-def ler_arquivo(nome_arquivo):
-    grafo = nx.Graph()
-    ponto_inicial = None
-    ponto_final = None
-    heuristica = {}
-    
-    with open(nome_arquivo, 'r') as arquivo:
-        linhas = arquivo.readlines()
-        
-        for linha in linhas:
-            partes = linha.split('(')
-            predicado = partes[0]
-            argumentos = partes[1].split(')')[0].split(',')
-            
-            if predicado == 'ponto_inicial':
-                ponto_inicial = argumentos[0]
-            elif predicado == 'ponto_final':
-                ponto_final = argumentos[0]
-            elif predicado == 'pode_ir':
-                peso = int(argumentos[2])
-                grafo.add_edge(argumentos[0], argumentos[1], weight=peso)
-            elif predicado == 'h':
-                no = argumentos[0]
-                valor_heuristica = int(argumentos[2])
-                grafo.nodes[no]['heuristica'] = valor_heuristica
-                heuristica[no] = valor_heuristica
-    
-    return grafo, ponto_inicial, ponto_final, heuristica
+def parse_input(file_path):
+    graph = {}
+    heuristics = {}
+    start = None
+    end = None
 
-def astar(grafo, ponto_inicial, ponto_final, heuristica):
-    visitados = set()
-    fronteira = [(0 + heuristica[ponto_inicial], ponto_inicial, [ponto_inicial])]
-    
-    while fronteira:
-        fronteira.sort(reverse=True)
-        _, atual, caminho = fronteira.pop()
-        if atual == ponto_final:
-            return caminho
-        if atual not in visitados:
-            visitados.add(atual)
-            for vizinho in grafo.neighbors(atual):
-                if vizinho not in visitados:
-                    novo_caminho = caminho + [vizinho]
-                    custo = len(novo_caminho) - 1 + heuristica[vizinho]
-                    fronteira.append((custo, vizinho, novo_caminho))
-    
+    with open(file_path, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if line.startswith("ponto_inicial"):
+                start = line.split("(")[1][0]
+            elif line.startswith("ponto_final"):
+                end = line.split("(")[1][0]
+            elif line.startswith("pode_ir"):
+                data = line.split(",")
+                if len(data) == 4:
+                    _, src, dest, weight = data
+                    src = src.strip()
+                    dest = dest.strip()
+                    weight = int(weight.split(".")[0])
+                    if src not in graph:
+                        graph[src] = []
+                    graph[src].append((dest, weight))
+            elif line.startswith("h"):
+                data = line.split(",")
+                if len(data) == 4:
+                    _, node, _, h_value = data
+                    node = node.strip()
+                    h_value = int(h_value.split(".")[0])
+                    heuristics[node] = h_value
+
+    return graph, start, end, heuristics
+
+def astar(graph, start, end, heuristics):
+    open_set = [(0, start)]
+    came_from = {}
+    g_score = {node: float('inf') for node in graph}
+    g_score[start] = 0
+    f_score = {node: float('inf') for node in graph}
+    f_score[start] = heuristics[start]
+
+    while open_set:
+        current_f, current_node = heappop(open_set)
+
+        if current_node == end:
+            path = []
+            while current_node in came_from:
+                path.append(current_node)
+                current_node = came_from[current_node]
+            path.append(start)
+            path.reverse()
+            return path
+
+        for neighbor, weight in graph[current_node]:
+            tentative_g_score = g_score[current_node] + weight
+            if tentative_g_score < g_score[neighbor]:
+                came_from[neighbor] = current_node
+                g_score[neighbor] = tentative_g_score
+                f_score[neighbor] = g_score[neighbor] + heuristics[neighbor]
+                heappush(open_set, (f_score[neighbor], neighbor))
+
     return None
 
-nome_arquivo = "grafo2.txt"
-grafo, ponto_inicial, ponto_final, heuristica = ler_arquivo(nome_arquivo)
+file_path = "grafo.txt"
 
-caminho_astar = astar(grafo, ponto_inicial, ponto_final, heuristica)
-print("Caminho encontrado (A*):", caminho_astar)
+graph, start, end, heuristics = parse_input(file_path)
+
+path = astar(graph, start, end, heuristics)
+if path:
+    print("Caminho encontrado:", path)
+else:
+    print("Não foi possível encontrar um caminho.")
