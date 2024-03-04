@@ -11,28 +11,33 @@ def ler_arquivo(nome_arquivo):
     ponto_final = None
     heuristica = {}  # Dicionário para armazenar as heurísticas dos nós
     
-    with open(nome_arquivo, 'r') as arquivo:
-        linhas = arquivo.readlines()
-        
-        for linha in linhas:
-            partes = linha.split('(')
-            predicado = partes[0]
-            argumentos = partes[1].split(')')[0].split(',')
+    try:
+        with open(nome_arquivo, 'r') as arquivo:
+            linhas = arquivo.readlines()
             
-            if predicado == 'ponto_inicial':
-                ponto_inicial = argumentos[0]
-            elif predicado == 'ponto_final':
-                ponto_final = argumentos[0]
-            elif predicado == 'pode_ir':
-                peso = int(argumentos[2])
-                grafo.add_edge(argumentos[0], argumentos[1], weight=peso)
-            elif predicado == 'h':
-                no = argumentos[0]
-                valor_heuristica = int(argumentos[2])
-                grafo.nodes[no]['heuristica'] = valor_heuristica
-                heuristica[no] = valor_heuristica  # Adiciona a heurística ao dicionário
+            for linha in linhas:
+                partes = linha.split('(')
+                predicado = partes[0]
+                argumentos = partes[1].split(')')[0].split(',')
+                
+                if predicado == 'ponto_inicial':
+                    ponto_inicial = argumentos[0]
+                elif predicado == 'ponto_final':
+                    ponto_final = argumentos[0]
+                elif predicado == 'pode_ir':
+                    peso = int(argumentos[2])
+                    grafo.add_edge(argumentos[0], argumentos[1], weight=peso)
+                elif predicado == 'h':
+                    no = argumentos[0]
+                    valor_heuristica = int(argumentos[2])
+                    grafo.nodes[no]['heuristica'] = valor_heuristica
+                    heuristica[no] = valor_heuristica  # Adiciona a heurística ao dicionário
+        input("Arquivo carregado")
+        return grafo, ponto_inicial, ponto_final, heuristica
     
-    return grafo, ponto_inicial, ponto_final, heuristica
+    except FileNotFoundError:
+        print("O arquivo", nome_arquivo, "não foi encontrado.")
+        return None, None, None, None
 
 def dijkstra(grafo, ponto_inicial, ponto_final):
     # Inicializa os custos dos vértices como infinito e o anterior como None
@@ -140,18 +145,37 @@ def A_Star(grafo, ponto_inicial, ponto_final, heuristica):
     return None  # Failure
     
 
-nome_arquivo = "grafo2.txt"  # Nome do arquivo de entrada
-grafo, ponto_inicial, ponto_final, heuristica = ler_arquivo(nome_arquivo)
+def menu():
+    while True:
+        print("\nMenu:")
+        print("1 - Carregar arquivo")
+        print("2 - Executar DFS")
+        print("3 - Executar Dijkstra")
+        print("4 - Executar A*")
+        print("5 - Sair")
 
-opcao = input("Escolha o algoritmo a ser executado (dijkstra, DFS ou A*): ")
-if opcao == "dijkstra":
-    caminho_minimo = dijkstra(grafo, ponto_inicial, ponto_final)
-    print("Caminho mínimo (Dijkstra):", caminho_minimo)
-elif opcao == "DFS":
-    caminho_dfs = dfs(grafo, ponto_inicial, ponto_final)
-    print("Caminho encontrado (Busca em Profundidade):", caminho_dfs)
-elif opcao == "A*":
-    caminho_astar = A_Star(grafo, ponto_inicial, ponto_final, heuristica)
-    print("Caminho encontrado (A*):", caminho_astar)
-else:
-    print("Opção inválida.")
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            nome_arquivo = input("Entre com o nome do arquivo: ")  # Nome do arquivo de entrada
+            grafo, ponto_inicial, ponto_final, heuristica = ler_arquivo(nome_arquivo)
+        elif opcao == "2":
+            print("Executando DFS...")
+            caminho_dfs = dfs(grafo, ponto_inicial, ponto_final)
+            print("Caminho encontrado (Busca em Profundidade):", caminho_dfs)
+        elif opcao == "3":
+            print("Executando Dijkstra...")
+            caminho_minimo = dijkstra(grafo, ponto_inicial, ponto_final)
+            print("Caminho mínimo (Dijkstra):", caminho_minimo)
+        elif opcao == "4":
+            print("Executando A*...")
+            caminho_astar = A_Star(grafo, ponto_inicial, ponto_final, heuristica)
+            print("Caminho encontrado (A*):", caminho_astar)
+        elif opcao == "5":
+            print("Saindo...")
+            break
+        else:
+            print("Opção inválida. Por favor, escolha uma opção válida.")
+
+if __name__ == "__main__":
+    menu()
